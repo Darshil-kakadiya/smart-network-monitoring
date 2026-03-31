@@ -1,0 +1,13 @@
+flask
+flask-socketio
+flask-login
+psutil
+eventlet
+cryptography
+scikit-learn
+numpy
+pandas
+Werkzeug
+requests
+python-dotenv
+scapy

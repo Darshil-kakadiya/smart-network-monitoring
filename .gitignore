@@ -1,0 +1,5 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+server/__pycache__/
+shared_files/.transfer_meta/

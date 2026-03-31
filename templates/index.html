@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NetShield LAN — Control Center</title>
+<link rel="stylesheet" href="/static/style.css">
+<!-- Chart.js + SocketIO CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- ══ TOP BAR ══════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    <span>NetShield LAN</span>
+  </div>
+  <div class="topbar-center">
+    <span id="clock">SCANNING SYSTEM TIME...</span>
+  </div>
+  <div class="topbar-right">
+    <span class="badge" id="sec-badge">🟢 System Secure</span>
+    <a href="/logout" class="logout-btn">Terminate Session</a>
+  </div>
+</header>
+
+<!-- ══ MAIN GRID ═════════════════════════════════════════════════════════════ -->
+<main class="grid">
+
+  <!-- ── Row 1: KPI cards ─────────────────────────────────────────────────── -->
+  <div class="kpi-row">
+    <div class="glass kpi-card">
+      <div class="kpi-icon-container">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Uplink Speed</div>
+        <div class="kpi-value" id="kpi-upload">0.00 MB/s</div>
+      </div>
+    </div>
+    <div class="glass kpi-card">
+      <div class="kpi-icon-container" style="color: var(--purple); box-shadow: inset 0 0 10px var(--purple-glow);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Downlink Speed</div>
+        <div class="kpi-value" id="kpi-download">0.00 MB/s</div>
+      </div>
+    </div>
+    <div class="glass kpi-card">
+      <div class="kpi-icon-container" style="color: var(--yellow); box-shadow: inset 0 0 10px hsla(45, 100%, 50%, 0.2);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Device Nodes</div>
+        <div class="kpi-value" id="kpi-devices">0</div>
+      </div>
+    </div>
+    <div class="glass kpi-card">
+      <div class="kpi-icon-container" style="color: var(--pink); box-shadow: inset 0 0 10px hsla(330, 100%, 60%, 0.2);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">System Load</div>
+        <div class="kpi-value" id="kpi-cpu">0% / 0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Row 2: Network chart + Device list ──────────────────────────────── -->
+  <section class="glass card chart-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      Network Real-Time Telemetry
+    </h2>
+    <div style="height: 320px;">
+        <canvas id="netChart"></canvas>
+    </div>
+  </section>
+
+  <section class="glass card" id="device-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      Node Discovery Registry
+    </h2>
+    <ul id="device-list"><li class="dim">Initializing network scan...</li></ul>
+  </section>
+
+  <!-- ── Row 3: AI panel + Antigravity ────────────────────────────────────── -->
+  <section class="glass card" id="ai-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="8" width="16" height="12" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+      AI Threat Intelligence
+    </h2>
+    <div id="alert-feed" class="scroll-feed"></div>
+
+    <div class="chatbox">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px; margin-right:5px; vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        Neural Assistant Console
+      </h3>
+      <div id="chat-log" class="chat-log"></div>
+      <div class="chat-input-row">
+        <input id="chat-in" type="text" placeholder="Access neural commands (/status, /security)...">
+        <button onclick="sendChat()">Execute</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="glass card" id="health-card">
+    <div class="health-header">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"></path><path d="M12 6V12L16 14"></path></svg>
+        Network Health
+      </h2>
+      <div class="health-status" id="health-status">STATUS: GOOD</div>
+    </div>
+
+    <div class="health-stat-group">
+      <div class="health-stat-item">
+        <div class="label-group"><span>Health Score</span><span id="health-score" class="val">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="health-score-bar"></div></div>
+      </div>
+
+      <div class="health-stat-item">
+        <div class="label-group"><span>Network Load</span><span id="network-load" class="val">0%</span></div>
+        <div class="progress-track"><div class="progress-fill red" id="network-load-bar"></div></div>
+      </div>
+
+      <div class="health-stat-item">
+        <div class="label-group"><span>Average Transfer Delay</span><span id="transfer-delay" class="val">0 ms</span></div>
+      </div>
+    </div>
+
+    <div style="height: 240px;">
+        <canvas id="healthChart"></canvas>
+    </div>
+  </section>
+
+  <!-- ── Row 4: File transfer ─────────────────────────────────────────────── -->
+  <section class="glass card full-width" id="file-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      Secure LAN File Transfer
+    </h2>
+    <div class="file-grid">
+        <div class="transfer-card transfer-setup-card">
+          <div class="panel-copy">
+            <div class="tf-name">Transfer Setup</div>
+            <p class="dim">Configure destination nodes, file path, reliability settings, and wire protection before dispatch.</p>
+          </div>
+
+          <div class="transfer-meta-strip">
+            <div class="meta-chip">CTRL PORT 9092</div>
+            <div class="meta-chip">DATA PORT 9093</div>
+            <div class="meta-chip">CHUNK + RESUME</div>
+            <div class="meta-chip">AES-GCM READY</div>
+          </div>
+
+          <div class="file-controls">
+            <div class="control-field field-wide">
+              <span class="control-label">Target Device IP(s)</span>
+              <input id="ft-ip" type="text" placeholder="192.168.1.23, 192.168.1.24">
+              <span class="control-hint">Use commas to dispatch the same file to multiple receivers at once.</span>
+            </div>
+
+            <div class="control-field field-wide">
+              <span class="control-label">Source File Path</span>
+              <input id="ft-path" type="text" placeholder="/Users/apple/Desktop/report.pdf">
+            </div>
+
+            <div class="control-field">
+              <span class="control-label">Transfer Mode</span>
+              <select id="ft-mode">
+                <option value="parallel">Parallel chunk dispatch</option>
+                <option value="normal">Sequential stream mode</option>
+              </select>
+            </div>
+
+            <div class="control-field">
+              <span class="control-label">Parallel Streams</span>
+              <input id="ft-parallelism" type="number" min="1" max="8" value="4">
+            </div>
+
+            <div class="control-field">
+              <span class="control-label">Chunk Size (KB)</span>
+              <input id="ft-chunk" type="number" min="64" step="64" value="256">
+            </div>
+
+            <div class="control-field">
+              <span class="control-label">Max Retries</span>
+              <input id="ft-retries" type="number" min="1" max="10" value="3">
+            </div>
+          </div>
+
+          <div class="transfer-toggles">
+            <label class="toggle-chip"><input id="ft-compression" type="checkbox" checked> Compression</label>
+            <label class="toggle-chip"><input id="ft-encryption" type="checkbox" checked> AES-GCM Encryption</label>
+          </div>
+
+          <div class="transfer-actions">
+            <button onclick="sendFile()">Start Reliable Transfer</button>
+            <div id="ft-feedback" class="status-strip idle">Dispatcher idle. Submit a source path and at least one target IP to begin.</div>
+          </div>
+        </div>
+
+        <div class="transfer-side-grid">
+          <div class="transfer-summary-grid">
+            <div class="transfer-card summary-card">
+              <div class="tf-name">Normal Mode Average</div>
+              <div id="summary-normal" class="summary-state">
+                <div class="summary-value">NO DATA</div>
+                <div class="dim">Complete one sequential transfer to populate the baseline.</div>
+              </div>
+            </div>
+            <div class="transfer-card summary-card">
+              <div class="tf-name">Parallel Mode Average</div>
+              <div id="summary-parallel" class="summary-state">
+                <div class="summary-value">NO DATA</div>
+                <div class="dim">Complete one parallel transfer to populate the performance view.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="transfer-card transfer-live-card">
+            <div class="panel-copy">
+              <div class="tf-name">Live Transfer Telemetry</div>
+              <p class="dim">Observe sender and receiver sessions, throughput, latency, retries, and completion state in real time.</p>
+            </div>
+          <div id="transfer-list" class="transfer-monitor">
+            <div class="transfer-card empty-telemetry-card">
+              <div class="summary-value">NO ACTIVE SESSIONS</div>
+              <div class="dim">Queued, active, and completed sender or receiver sessions will appear here once transfer activity begins.</div>
+            </div>
+          </div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

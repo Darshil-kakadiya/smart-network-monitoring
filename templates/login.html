@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NetShield LAN — Login</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#080818;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(0,242,255,.25);border-radius:20px;padding:48px 40px;width:360px;box-shadow:0 0 60px rgba(0,242,255,.12)}
+  h1{color:#00f2ff;font-size:1.6rem;text-align:center;margin-bottom:8px}
+  p{color:#667;font-size:.85rem;text-align:center;margin-bottom:32px}
+  label{display:block;color:#aaa;font-size:.8rem;margin-bottom:6px}
+  input{width:100%;padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(0,242,255,.2);border-radius:10px;color:#fff;font-size:.95rem;margin-bottom:20px;outline:none;transition:.3s}
+  input:focus{border-color:#00f2ff;box-shadow:0 0 10px rgba(0,242,255,.3)}
+  button{width:100%;padding:13px;background:linear-gradient(135deg,#00f2ff,#7000ff);border:none;border-radius:10px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:1px;transition:.3s}
+  button:hover{opacity:.85;transform:translateY(-2px)}
+  .flash{color:#ff4f4f;font-size:.85rem;text-align:center;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>NetShield LAN</h1>
+  <p>Network Control System — Secure Login</p>
+  {% with messages = get_flashed_messages() %}{% if messages %}
+    <div class="flash">{{ messages[0] }}</div>
+  {% endif %}{% endwith %}
+  <form method="POST">
+    <label>Username</label>
+    <input type="text" name="username" placeholder="admin" autocomplete="off" required>
+    <label>Password</label>
+    <input type="password" name="password" placeholder="netshield" required>
+    <button type="submit">ENTER SYSTEM</button>
+  </form>
+</div>
+</body>
+</html>
